@@ -27,6 +27,7 @@ public abstract class Section {
     private boolean hasHeader = false;
     private boolean hasFooter = false;
     private boolean hasAdvert = false;
+    private int minItemsPerAd;
 
     @LayoutRes
     private final Integer itemResourceId;
@@ -75,6 +76,7 @@ public abstract class Section {
         this.hasHeader = (this.headerResourceId != null) || this.headerViewWillBeProvided;
         this.hasFooter = (this.footerResourceId != null) || this.footerViewWillBeProvided;
         this.hasAdvert = (this.advertResourceId != null) || this.advertViewWillBeProvided;
+        this.minItemsPerAd = sectionParameters.minItemsPerAd;
     }
 
     /**
@@ -105,6 +107,11 @@ public abstract class Section {
         }
 
         this.state = state;
+    }
+
+
+    public int getMinimumItemsPerAd() {
+        return minItemsPerAd;
     }
 
     /**

@@ -21,6 +21,8 @@ public final class SectionParameters {
     public final Integer emptyResourceId;
     @LayoutRes
     public final Integer advertResourceId;
+    public final int minItemsPerAd;
+
     public final boolean itemViewWillBeProvided;
     public final boolean headerViewWillBeProvided;
     public final boolean footerViewWillBeProvided;
@@ -44,6 +46,7 @@ public final class SectionParameters {
         this.failedViewWillBeProvided = builder.failedViewWillBeProvided;
         this.emptyViewWillBeProvided = builder.emptyViewWillBeProvided;
         this.advertViewWillBeProvided = builder.advertViewWillBeProvided;
+        this.minItemsPerAd = builder.minItemsPerAd;
 
         if (itemResourceId != null && itemViewWillBeProvided) {
             throw new IllegalArgumentException(
@@ -90,6 +93,9 @@ public final class SectionParameters {
      * Builder of {@link SectionParameters}.
      */
     public static class Builder {
+
+        private static final int DEFAULT_ITEMS_PER_AD = 5;
+
         @LayoutRes
         private Integer itemResourceId;
         @LayoutRes
@@ -104,6 +110,7 @@ public final class SectionParameters {
         private Integer emptyResourceId;
         @LayoutRes
         private Integer advertResourceId;
+        private int minItemsPerAd = DEFAULT_ITEMS_PER_AD;
         private boolean itemViewWillBeProvided;
         private boolean headerViewWillBeProvided;
         private boolean footerViewWillBeProvided;
@@ -122,7 +129,6 @@ public final class SectionParameters {
          * Constructor with optional parameter for backward compatibility purposes.
          *
          * @param itemResourceId layout resource for Section's items
-         *
          * @deprecated Use {@link #SectionParameters#builder} instead.
          */
         @Deprecated
@@ -284,6 +290,14 @@ public final class SectionParameters {
         public Builder advertViewWillBeProvided() {
             advertViewWillBeProvided = true;
 
+            return this;
+        }
+
+        public Builder minItemsPerAd(int count) {
+            if (count < DEFAULT_ITEMS_PER_AD)
+                count = DEFAULT_ITEMS_PER_AD;
+
+            this.minItemsPerAd = count;
             return this;
         }
 

@@ -1,5 +1,6 @@
 package io.github.luizgrp.sectionedrecyclerviewadapter.demo;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +8,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +30,7 @@ public class Example9Fragment extends Fragment {
 
 
     private SectionedRecyclerViewAdapter sectionAdapter;
+    private List<AdView> adViewList = new ArrayList<>();
 
     @Nullable
     @Override
@@ -31,31 +38,93 @@ public class Example9Fragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_ex9, container, false);
 
         sectionAdapter = new SectionedRecyclerViewAdapter();
+        adViewList.clear();
 
         for (char alphabet = 'A'; alphabet <= 'Z'; alphabet++) {
             List<String> contacts = getContactsWithLetter(alphabet);
 
             if (contacts.size() > 0) {
-                sectionAdapter.addSection(new ContactsSection(String.valueOf(alphabet), contacts));
+                ContactsSection section = new ContactsSection(String.valueOf(alphabet), contacts, getContext());
+                sectionAdapter.addSection(section);
+                AdView adView = section.getAdView();
+                if (adView != null)
+                    adViewList.add(adView);
             }
         }
 
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
+        loadBannerAd(0);
+
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(sectionAdapter);
 
         return view;
+
+    }
+
+
+    @Override
+    public void onPause() {
+        for (AdView item : adViewList) {
+            item.pause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        for (AdView item : adViewList) {
+            item.destroy();
+        }
+        super.onDestroy();
+    }
+
+    private void loadBannerAd(final int index) {
+
+        if (index >= adViewList.size()) {
+            return;
+        }
+
+
+        final AdView adView = adViewList.get(index);
+
+        // Set an AdListener on the AdView to wait for the previous banner ad
+        // to finish loading before loading the next ad in the items list.
+        adView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+                super.onAdLoaded();
+                // The previous banner ad loaded successfully, call this method again to
+                // load the next ad in the items list.
+                loadBannerAd(index + 1);
+            }
+
+            @Override
+            public void onAdFailedToLoad(int errorCode) {
+                // The previous banner ad failed to load. Call this method again to load
+                // the next ad in the items list
+                loadBannerAd(index + 1);
+            }
+        });
+
+        // Load the banner ad.
+        adView.loadAd(new AdRequest.Builder().build());
     }
 
     @Override
     public void onResume() {
-        super.onResume();
+
+        for (AdView item : adViewList) {
+            item.resume();
+        }
 
         if (getActivity() instanceof AppCompatActivity) {
             AppCompatActivity activity = ((AppCompatActivity) getActivity());
             if (activity.getSupportActionBar() != null)
                 activity.getSupportActionBar().setTitle(R.string.nav_example9);
         }
+
+        super.onResume();
     }
 
     private List<String> getContactsWithLetter(char letter) {
@@ -73,17 +142,26 @@ public class Example9Fragment extends Fragment {
 
     private class ContactsSection extends StatelessSection {
 
+        private static final String AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
+        private final Context context;
         String title;
         List<String> list;
+        private AdView adView;
 
-        ContactsSection(String title, List<String> list) {
+        ContactsSection(String title, List<String> list, Context context) {
             super(SectionParameters.builder()
                     .itemResourceId(R.layout.section_ex1_item)
+                    .advertResourceId(R.layout.banner_ad_container)
                     .headerResourceId(R.layout.section_ex1_header)
                     .build());
 
+            this.context = context;
             this.title = title;
             this.list = list;
+
+            adView = new AdView(context);
+            adView.setAdSize(AdSize.BANNER);
+            adView.setAdUnitId(AD_UNIT_ID);
         }
 
         @Override
@@ -93,15 +171,18 @@ public class Example9Fragment extends Fragment {
 
         @Override
         public RecyclerView.ViewHolder getItemViewHolder(View view) {
-            return new ItemViewHolder1(view);
+            return new ItemViewHolder(view);
+        }
+
+        @Override
+        public RecyclerView.ViewHolder getAdvertViewHolder(View view) {
+            return new AdViewHolder(view);
         }
 
         @Override
         public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
-            final ItemViewHolder1 itemHolder = (ItemViewHolder1) holder;
-
+            final ItemViewHolder itemHolder = (ItemViewHolder) holder;
             String name = list.get(position);
-
             itemHolder.tvItem.setText(name);
             itemHolder.imgItem.setImageResource(position % 2 == 0 ? R.drawable.ic_face_black_48dp : R.drawable.ic_tag_faces_black_48dp);
             itemHolder.rootView.setOnClickListener(new View.OnClickListener() {
@@ -111,6 +192,34 @@ public class Example9Fragment extends Fragment {
                 }
             });
 
+        }
+
+        public AdView getAdView() {
+            return adView;
+        }
+
+        @Override
+        public void onBindAdvertViewHolder(RecyclerView.ViewHolder holder) {
+            final AdViewHolder viewHolder = (AdViewHolder) holder;
+
+            AdViewHolder bannerHolder = (AdViewHolder) holder;
+
+            ViewGroup adCardView = (ViewGroup) bannerHolder.itemView;
+            // The AdViewHolder recycled by the RecyclerView may be a different
+            // instance than the one used previously for this position. Clear the
+            // AdViewHolder of any subviews in case it has a different
+            // AdView associated with it, and make sure the AdView for this position doesn't
+            // already have a parent of a different recycled AdViewHolder.
+            if (adCardView.getChildCount() > 0) {
+                adCardView.removeAllViews();
+            }
+
+            if (adView.getParent() != null) {
+                ((ViewGroup) adView.getParent()).removeView(adView);
+            }
+
+            // Add the banner ad to the ad view.
+            adCardView.addView(adView);
         }
 
         @Override
@@ -133,37 +242,30 @@ public class Example9Fragment extends Fragment {
         HeaderViewHolder(View view) {
             super(view);
 
-            tvTitle = (TextView) view.findViewById(R.id.tvTitle);
+            tvTitle = view.findViewById(R.id.tvTitle);
         }
     }
 
-    public static class ItemViewHolder1 extends RecyclerView.ViewHolder {
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
 
         private final View rootView;
         private final ImageView imgItem;
         private final TextView tvItem;
 
-        ItemViewHolder1(View view) {
+        ItemViewHolder(View view) {
             super(view);
 
             rootView = view;
-            imgItem = (ImageView) view.findViewById(R.id.imgItem);
-            tvItem = (TextView) view.findViewById(R.id.tvItem);
+            imgItem = view.findViewById(R.id.imgItem);
+            tvItem = view.findViewById(R.id.tvItem);
         }
     }
 
-    public static class ItemViewHolder2 extends RecyclerView.ViewHolder {
+    public class AdViewHolder extends RecyclerView.ViewHolder {
 
-        private final View rootView;
-        private final ImageView imgItem;
-        private final TextView tvItem;
-
-        ItemViewHolder2(View view) {
+        AdViewHolder(View view) {
             super(view);
-
-            rootView = view;
-            imgItem = (ImageView) view.findViewById(R.id.imgItem);
-            tvItem = (TextView) view.findViewById(R.id.tvItem);
         }
     }
+
 }

@@ -320,7 +320,7 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                     }
                 }
 
-                if (section.hasAdvert()) {
+                if (section.hasAdvert() && sectionTotal >= section.getMinimumItemsPerAd()) {
                     if (section.hasFooter()) {
                         if (position == (currentPos + sectionTotal)) {
                             // delegate the binding to the section header
@@ -334,6 +334,8 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                             return;
                         }
                     }
+                } else {
+                    section.setHasAdvert(false);
                 }
 
                 // delegate the binding to the section content
@@ -403,6 +405,20 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                     if (position == (currentPos + sectionTotal - 1)) {
                         return viewType + 1;
                     }
+                }
+
+                if (section.hasAdvert() && sectionTotal >= section.getMinimumItemsPerAd()) {
+                    if (section.hasFooter()) {
+                        if (position == (currentPos + sectionTotal)) {
+                            return viewType + 6;
+                        }
+                    } else {
+                        if (position == (currentPos + sectionTotal - 1)) {
+                            return viewType + 6;
+                        }
+                    }
+                } else {
+                    section.setHasAdvert(false);
                 }
 
                 switch (section.getState()) {
