@@ -1,12 +1,6 @@
 package io.github.luizgrp.sectionedrecyclerviewadapter.demo;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,15 +11,17 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.luizgrp.sectionedrecyclerviewadapter.CustomViewType;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionParameters;
 import io.github.luizgrp.sectionedrecyclerviewadapter.SectionedRecyclerViewAdapter;
 import io.github.luizgrp.sectionedrecyclerviewadapter.StatelessSection;
 
 public class Example9Fragment extends Fragment {
 
-    CustomViewType custom1 = new CustomViewType(ItemViewHolder1.class, R.layout.section_ex9_item1);
-    CustomViewType custom2 = new CustomViewType(ItemViewHolder2.class, R.layout.section_ex9_item2);
 
     private SectionedRecyclerViewAdapter sectionAdapter;
 
@@ -34,9 +30,9 @@ public class Example9Fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_ex9, container, false);
 
-        sectionAdapter = new SectionedRecyclerViewAdapter(custom1, custom2);
+        sectionAdapter = new SectionedRecyclerViewAdapter();
 
-        for(char alphabet = 'A'; alphabet <= 'Z';alphabet++) {
+        for (char alphabet = 'A'; alphabet <= 'Z'; alphabet++) {
             List<String> contacts = getContactsWithLetter(alphabet);
 
             if (contacts.size() > 0) {
@@ -81,7 +77,8 @@ public class Example9Fragment extends Fragment {
         List<String> list;
 
         ContactsSection(String title, List<String> list) {
-            super(new SectionParameters.Builder(R.layout.section_ex1_item)
+            super(SectionParameters.builder()
+                    .itemResourceId(R.layout.section_ex1_item)
                     .headerResourceId(R.layout.section_ex1_header)
                     .build());
 
@@ -101,50 +98,19 @@ public class Example9Fragment extends Fragment {
 
         @Override
         public void onBindItemViewHolder(RecyclerView.ViewHolder holder, int position) {
-            try {
-                if (custom1.isInstanceOf(holder)) {
-                    final ItemViewHolder1 itemHolder = (ItemViewHolder1) holder;
+            final ItemViewHolder1 itemHolder = (ItemViewHolder1) holder;
 
-                    String name = list.get(position);
+            String name = list.get(position);
 
-                    itemHolder.tvItem.setText(name);
-                    itemHolder.imgItem.setImageResource(name.hashCode() % 2 == 0 ? R.drawable.ic_face_black_48dp : R.drawable.ic_tag_faces_black_48dp);
-
-                    itemHolder.rootView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(getContext(), String.format("Clicked on position #%s of Section %s, VH1", sectionAdapter.getPositionInSection(itemHolder.getAdapterPosition()), title), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else if (custom2.isInstanceOf(holder)) {
-                    final ItemViewHolder2 itemHolder = (ItemViewHolder2) holder;
-
-                    String name = list.get(position);
-
-                    itemHolder.tvItem.setText(name);
-                    itemHolder.imgItem.setImageResource(name.hashCode() % 2 == 0 ? R.drawable.ic_face_black_48dp : R.drawable.ic_tag_faces_black_48dp);
-
-                    itemHolder.rootView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(getContext(), String.format("Clicked on position #%s of Section %s, VH2", sectionAdapter.getPositionInSection(itemHolder.getAdapterPosition()), title), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    throw new Exception("Unrecognized ViewHolder");
+            itemHolder.tvItem.setText(name);
+            itemHolder.imgItem.setImageResource(position % 2 == 0 ? R.drawable.ic_face_black_48dp : R.drawable.ic_tag_faces_black_48dp);
+            itemHolder.rootView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getContext(), String.format("Clicked on position #%s of Section %s, VH1", sectionAdapter.getPositionInSection(itemHolder.getAdapterPosition()), title), Toast.LENGTH_SHORT).show();
                 }
-            } catch (Exception e) {
-                Log.e(this.getClass().getSimpleName(), "onBindItemViewHolder", e);
-            }
-        }
+            });
 
-        @Override
-        public int getItemViewType(int position) {
-            if (position % 2 == 0) {
-                return sectionAdapter.getCustomViewTypeKey(custom1);
-            } else {
-                return sectionAdapter.getCustomViewTypeKey(custom2);
-            }
         }
 
         @Override

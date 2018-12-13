@@ -1,18 +1,20 @@
 package io.github.luizgrp.sectionedrecyclerviewadapter;
 
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import org.apache.commons.collections4.map.ListOrderedMap;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
+import androidx.recyclerview.widget.RecyclerView;
 
 import static io.github.luizgrp.sectionedrecyclerviewadapter.Section.State;
 
@@ -23,66 +25,32 @@ import static io.github.luizgrp.sectionedrecyclerviewadapter.Section.State;
 @SuppressWarnings({"WeakerAccess", "SameParameterValue", "PMD.CollapsibleIfStatements"})
 public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    
+
     public final static int VIEW_TYPE_HEADER = 0;
     public final static int VIEW_TYPE_FOOTER = 1;
     public final static int VIEW_TYPE_ITEM_LOADED = 2;
     public final static int VIEW_TYPE_LOADING = 3;
     public final static int VIEW_TYPE_FAILED = 4;
     public final static int VIEW_TYPE_EMPTY = 5;
-    private static final int VIEW_TYPE_QTY = 6;
-
-    private final static int customViewTypeStart = 200;
-    private HashMap<Integer, CustomViewType> customViewTypes;
+    public final static int VIEW_TYPE_ADVERT = 6;
+    private static final int VIEW_TYPE_QTY = 7;
 
     private ListOrderedMap<String, Section> sections;
     private HashMap<String, Integer> sectionViewTypeNumbers;
 
-
     private int viewTypeCount = 0;
 
-
-    public SectionedRecyclerViewAdapter(CustomViewType...customViewTypes) {
-        sections = new ListOrderedMap<>();
-        sectionViewTypeNumbers = new HashMap<>();
-        this.customViewTypes = new HashMap<>();
-        for (CustomViewType customViewType : customViewTypes) {
-            int key = customViewTypeStart + this.customViewTypes.size();
-            this.customViewTypes.put(key, customViewType);
-        }
-    }
-
     public SectionedRecyclerViewAdapter() {
-
         sections = new ListOrderedMap<>();
         sectionViewTypeNumbers = new HashMap<>();
-        customViewTypes = new HashMap<>();
     }
 
-    public int getCustomViewTypeKey(CustomViewType customViewType) {
-        for (Map.Entry<Integer, CustomViewType> entry : customViewTypes.entrySet()) {
-            if (entry.getValue() == customViewType) {
-                return entry.getKey();
-            }
-        }
-        return -1;
-    }
-
-    public HashMap<Integer, CustomViewType> getCustomViewTypes() {
-        return customViewTypes;
-    }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         RecyclerView.ViewHolder viewHolder = null;
 
         for (Map.Entry<String, Integer> entry : sectionViewTypeNumbers.entrySet()) {
-            // If viewType is custom, return the custom ViewHolder
-            for (Map.Entry<Integer, CustomViewType> customEntry : customViewTypes.entrySet()) {
-                if (customEntry.getKey() == viewType) {
-                    return customEntry.getValue().getViewHolder(parent);
-                }
-            }
 
             // viewType is not custom, return header, footer, etc ViewHolder
             if (viewType >= entry.getValue() && viewType < entry.getValue() + VIEW_TYPE_QTY) {
@@ -108,6 +76,9 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                         break;
                     case VIEW_TYPE_EMPTY:
                         viewHolder = getEmptyViewHolder(parent, section);
+                        break;
+                    case VIEW_TYPE_ADVERT:
+                        viewHolder = getAdvertViewHolder(parent, section);
                         break;
                     default:
                         throw new IllegalArgumentException("Invalid viewType");
@@ -226,6 +197,24 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
         return section.getEmptyViewHolder(view);
     }
 
+    private RecyclerView.ViewHolder getAdvertViewHolder(ViewGroup parent, Section section) {
+        View view;
+        if (section.isAdvertViewWillBeProvided()) {
+            view = section.getAdvertView(parent);
+            if (view == null) {
+                throw new NullPointerException("Section.getAdvertView() returned null");
+            }
+        } else {
+            Integer resId = section.getAdvertResourceId();
+            if (resId == null) {
+                throw new NullPointerException("Missing 'advert' resource id");
+            }
+            view = inflate(resId, parent);
+        }
+        return section.getAdvertViewHolder(view);
+    }
+
+
     /**
      * Add a section to this recyclerview.
      *
@@ -328,6 +317,22 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                         // delegate the binding to the section header
                         getSectionForPosition(position).onBindFooterViewHolder(holder);
                         return;
+                    }
+                }
+
+                if (section.hasAdvert()) {
+                    if (section.hasFooter()) {
+                        if (position == (currentPos + sectionTotal)) {
+                            // delegate the binding to the section header
+                            getSectionForPosition(position).onBindAdvertViewHolder(holder);
+                            return;
+                        }
+                    } else {
+                        if (position == (currentPos + sectionTotal - 1)) {
+                            // delegate the binding to the section header
+                            getSectionForPosition(position).onBindAdvertViewHolder(holder);
+                            return;
+                        }
                     }
                 }
 
@@ -1235,6 +1240,12 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
      */
     public static class EmptyViewHolder extends RecyclerView.ViewHolder {
         public EmptyViewHolder(View itemView) {
+            super(itemView);
+        }
+    }
+
+    public static class AdvertViewHolder extends RecyclerView.ViewHolder {
+        public AdvertViewHolder(View itemView) {
             super(itemView);
         }
     }

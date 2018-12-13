@@ -19,12 +19,15 @@ public final class SectionParameters {
     public final Integer failedResourceId;
     @LayoutRes
     public final Integer emptyResourceId;
+    @LayoutRes
+    public final Integer advertResourceId;
     public final boolean itemViewWillBeProvided;
     public final boolean headerViewWillBeProvided;
     public final boolean footerViewWillBeProvided;
     public final boolean loadingViewWillBeProvided;
     public final boolean failedViewWillBeProvided;
     public final boolean emptyViewWillBeProvided;
+    public final boolean advertViewWillBeProvided;
 
     private SectionParameters(Builder builder) {
         this.itemResourceId = builder.itemResourceId;
@@ -33,12 +36,14 @@ public final class SectionParameters {
         this.loadingResourceId = builder.loadingResourceId;
         this.failedResourceId = builder.failedResourceId;
         this.emptyResourceId = builder.emptyResourceId;
+        this.advertResourceId = builder.advertResourceId;
         this.itemViewWillBeProvided = builder.itemViewWillBeProvided;
         this.headerViewWillBeProvided = builder.headerViewWillBeProvided;
         this.footerViewWillBeProvided = builder.footerViewWillBeProvided;
         this.loadingViewWillBeProvided = builder.loadingViewWillBeProvided;
         this.failedViewWillBeProvided = builder.failedViewWillBeProvided;
         this.emptyViewWillBeProvided = builder.emptyViewWillBeProvided;
+        this.advertViewWillBeProvided = builder.advertViewWillBeProvided;
 
         if (itemResourceId != null && itemViewWillBeProvided) {
             throw new IllegalArgumentException(
@@ -67,6 +72,11 @@ public final class SectionParameters {
             throw new IllegalArgumentException(
                     "emptyResourceId and emptyViewWillBeProvided cannot both be set");
         }
+
+        if (advertResourceId != null && advertViewWillBeProvided) {
+            throw new IllegalArgumentException(
+                    "advertResourceId and advertViewWillBeProvided cannot both be set");
+        }
     }
 
     /**
@@ -92,12 +102,15 @@ public final class SectionParameters {
         private Integer failedResourceId;
         @LayoutRes
         private Integer emptyResourceId;
+        @LayoutRes
+        private Integer advertResourceId;
         private boolean itemViewWillBeProvided;
         private boolean headerViewWillBeProvided;
         private boolean footerViewWillBeProvided;
         private boolean loadingViewWillBeProvided;
         private boolean failedViewWillBeProvided;
         private boolean emptyViewWillBeProvided;
+        private boolean advertViewWillBeProvided;
 
         /**
          * Constructor with mandatory parameters of {@link Section} (namely none).
@@ -257,6 +270,19 @@ public final class SectionParameters {
          */
         public Builder emptyViewWillBeProvided() {
             emptyViewWillBeProvided = true;
+
+            return this;
+        }
+
+
+        public Builder advertResourceId(@LayoutRes int advertResourceId) {
+            this.advertResourceId = advertResourceId;
+
+            return this;
+        }
+
+        public Builder advertViewWillBeProvided() {
+            advertViewWillBeProvided = true;
 
             return this;
         }

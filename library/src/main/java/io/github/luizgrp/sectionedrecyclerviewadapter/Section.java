@@ -1,15 +1,17 @@
 package io.github.luizgrp.sectionedrecyclerviewadapter;
 
-import androidx.annotation.LayoutRes;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.LayoutRes;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Abstract Section to be used with {@link SectionedRecyclerViewAdapter}.
  */
 @SuppressWarnings({"WeakerAccess", "PMD.AvoidFieldNameMatchingMethodName"})
 public abstract class Section {
+
 
     public enum State {
         LOADING,
@@ -24,6 +26,7 @@ public abstract class Section {
 
     private boolean hasHeader = false;
     private boolean hasFooter = false;
+    private boolean hasAdvert = false;
 
     @LayoutRes
     private final Integer itemResourceId;
@@ -37,12 +40,16 @@ public abstract class Section {
     private final Integer failedResourceId;
     @LayoutRes
     private final Integer emptyResourceId;
+    @LayoutRes
+    private final Integer advertResourceId;
+
     private final boolean itemViewWillBeProvided;
     private final boolean headerViewWillBeProvided;
     private final boolean footerViewWillBeProvided;
     private final boolean loadingViewWillBeProvided;
     private final boolean failedViewWillBeProvided;
     private final boolean emptyViewWillBeProvided;
+    private final boolean advertViewWillBeProvided;
 
     /**
      * Create a Section object based on {@link SectionParameters}.
@@ -56,15 +63,18 @@ public abstract class Section {
         this.loadingResourceId = sectionParameters.loadingResourceId;
         this.failedResourceId = sectionParameters.failedResourceId;
         this.emptyResourceId = sectionParameters.emptyResourceId;
+        this.advertResourceId = sectionParameters.advertResourceId;
         this.itemViewWillBeProvided = sectionParameters.itemViewWillBeProvided;
         this.headerViewWillBeProvided = sectionParameters.headerViewWillBeProvided;
         this.footerViewWillBeProvided = sectionParameters.footerViewWillBeProvided;
         this.loadingViewWillBeProvided = sectionParameters.loadingViewWillBeProvided;
         this.failedViewWillBeProvided = sectionParameters.failedViewWillBeProvided;
         this.emptyViewWillBeProvided = sectionParameters.emptyViewWillBeProvided;
+        this.advertViewWillBeProvided = sectionParameters.advertViewWillBeProvided;
 
         this.hasHeader = (this.headerResourceId != null) || this.headerViewWillBeProvided;
         this.hasFooter = (this.footerResourceId != null) || this.footerViewWillBeProvided;
+        this.hasAdvert = (this.advertResourceId != null) || this.advertViewWillBeProvided;
     }
 
     /**
@@ -158,6 +168,15 @@ public abstract class Section {
      */
     public final void setHasFooter(boolean hasFooter) {
         this.hasFooter = hasFooter;
+    }
+
+
+    public boolean hasAdvert() {
+        return hasAdvert;
+    }
+
+    public void setHasAdvert(boolean hasAdvert) {
+        this.hasAdvert = hasAdvert;
     }
 
     /**
@@ -277,6 +296,15 @@ public abstract class Section {
      */
     public final Integer getEmptyResourceId() {
         return emptyResourceId;
+    }
+
+
+    public final Integer getAdvertResourceId() {
+        return advertResourceId;
+    }
+
+    public final boolean isAdvertViewWillBeProvided() {
+        return advertViewWillBeProvided;
     }
 
     /**
@@ -433,23 +461,17 @@ public abstract class Section {
 
     /**
      * Return the ViewType for a single item of this Section
+     *
      * @param position position of the Item in the Section, not in the RecyclerView
      * @return ViewType for the Item
      */
     public int getItemViewType(int position) {
         return -1;
     }
+
     /**
-     * Bind the data to the ViewHolder for an Item of this Section
-     * @param holder ViewHolder for the Item of this Section
-     * @param position position of the item in the Section, not in the RecyclerView
-=======
-     * Creates the View for the Loading state. This must be implemented if and only if
-     * {@link #isLoadingViewWillBeProvided()} is true.
-     *
      * @param parent The parent view. Note that there is no need to attach the new view.
      * @return View for the Loading state of this Section.
->>>>>>> 5c8421ea7d1e539c7a4630a06a6228904c540674
      */
     public View getLoadingView(@SuppressWarnings("unused") ViewGroup parent) {
         throw new UnsupportedOperationException(
@@ -526,6 +548,20 @@ public abstract class Section {
      */
     public RecyclerView.ViewHolder getEmptyViewHolder(View view) {
         return new SectionedRecyclerViewAdapter.EmptyViewHolder(view);
+    }
+
+
+    public View getAdvertView(@SuppressWarnings("unused") ViewGroup parent) {
+        throw new UnsupportedOperationException(
+                "You need to implement getEmptyView() if you set emptyViewWillBeProvided");
+    }
+
+    public RecyclerView.ViewHolder getAdvertViewHolder(View view) {
+        return new SectionedRecyclerViewAdapter.EmptyViewHolder(view);
+    }
+
+    public void onBindAdvertViewHolder(RecyclerView.ViewHolder holder) {
+        // Nothing to bind here.
     }
 
     /**
