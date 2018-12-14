@@ -366,7 +366,7 @@ public abstract class Section {
                 throw new IllegalStateException("Invalid state");
         }
 
-        return contentItemsTotal + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0);
+        return contentItemsTotal + (hasHeader ? 1 : 0) + (hasFooter ? 1 : 0) + (hasAdvert ? 1 : 0);
     }
 
     /**

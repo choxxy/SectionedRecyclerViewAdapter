@@ -152,16 +152,22 @@ public class Example9Fragment extends Fragment {
             super(SectionParameters.builder()
                     .itemResourceId(R.layout.section_ex1_item)
                     .advertResourceId(R.layout.banner_ad_container)
+                    //.footerResourceId(R.layout.section_ex3_footer)
                     .headerResourceId(R.layout.section_ex1_header)
                     .build());
+
 
             this.context = context;
             this.title = title;
             this.list = list;
 
-            adView = new AdView(context);
-            adView.setAdSize(AdSize.BANNER);
-            adView.setAdUnitId(AD_UNIT_ID);
+            if (getMinimumItemsPerAd() > list.size()) {
+                setHasAdvert(false);
+            } else {
+                adView = new AdView(context);
+                adView.setAdSize(AdSize.BANNER);
+                adView.setAdUnitId(AD_UNIT_ID);
+            }
         }
 
         @Override
@@ -200,16 +206,9 @@ public class Example9Fragment extends Fragment {
 
         @Override
         public void onBindAdvertViewHolder(RecyclerView.ViewHolder holder) {
-            final AdViewHolder viewHolder = (AdViewHolder) holder;
-
             AdViewHolder bannerHolder = (AdViewHolder) holder;
-
             ViewGroup adCardView = (ViewGroup) bannerHolder.itemView;
-            // The AdViewHolder recycled by the RecyclerView may be a different
-            // instance than the one used previously for this position. Clear the
-            // AdViewHolder of any subviews in case it has a different
-            // AdView associated with it, and make sure the AdView for this position doesn't
-            // already have a parent of a different recycled AdViewHolder.
+
             if (adCardView.getChildCount() > 0) {
                 adCardView.removeAllViews();
             }
@@ -230,8 +229,23 @@ public class Example9Fragment extends Fragment {
         @Override
         public void onBindHeaderViewHolder(RecyclerView.ViewHolder holder) {
             HeaderViewHolder headerHolder = (HeaderViewHolder) holder;
-
             headerHolder.tvTitle.setText(title);
+        }
+
+        @Override
+        public RecyclerView.ViewHolder getFooterViewHolder(View view) {
+            return new FooterViewHolder(view);
+        }
+
+        @Override
+        public void onBindFooterViewHolder(RecyclerView.ViewHolder holder) {
+            FooterViewHolder footerHolder = (FooterViewHolder) holder;
+            footerHolder.rootView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getContext(), String.format("Clicked on footer of Section %s", title), Toast.LENGTH_SHORT).show();
+                }
+            });
         }
     }
 
@@ -265,6 +279,17 @@ public class Example9Fragment extends Fragment {
 
         AdViewHolder(View view) {
             super(view);
+        }
+    }
+
+    private class FooterViewHolder extends RecyclerView.ViewHolder {
+
+        private final View rootView;
+
+        FooterViewHolder(View view) {
+            super(view);
+
+            rootView = view;
         }
     }
 

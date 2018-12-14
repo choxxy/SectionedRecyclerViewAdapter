@@ -33,7 +33,7 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
     public final static int VIEW_TYPE_FAILED = 4;
     public final static int VIEW_TYPE_EMPTY = 5;
     public final static int VIEW_TYPE_ADVERT = 6;
-    private static final int VIEW_TYPE_QTY = 7;
+    private static final int VIEW_TYPE_QTY = 8;
 
     private ListOrderedMap<String, Section> sections;
     private HashMap<String, Integer> sectionViewTypeNumbers;
@@ -52,7 +52,6 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
 
         for (Map.Entry<String, Integer> entry : sectionViewTypeNumbers.entrySet()) {
 
-            // viewType is not custom, return header, footer, etc ViewHolder
             if (viewType >= entry.getValue() && viewType < entry.getValue() + VIEW_TYPE_QTY) {
 
                 Section section = sections.get(entry.getKey());
@@ -235,9 +234,7 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
      */
     public String addSection(Section section) {
         String tag = UUID.randomUUID().toString();
-
         addSection(tag, section);
-
         return tag;
     }
 
@@ -320,22 +317,12 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                     }
                 }
 
-                if (section.hasAdvert() && sectionTotal >= section.getMinimumItemsPerAd()) {
-                    if (section.hasFooter()) {
-                        if (position == (currentPos + sectionTotal)) {
-                            // delegate the binding to the section header
-                            getSectionForPosition(position).onBindAdvertViewHolder(holder);
-                            return;
-                        }
-                    } else {
-                        if (position == (currentPos + sectionTotal - 1)) {
-                            // delegate the binding to the section header
-                            getSectionForPosition(position).onBindAdvertViewHolder(holder);
-                            return;
-                        }
+                if (section.hasAdvert()) {
+                    if (position == (currentPos + sectionTotal - 1)) {
+                        // delegate the binding to the section header
+                        getSectionForPosition(position).onBindAdvertViewHolder(holder);
+                        return;
                     }
-                } else {
-                    section.setHasAdvert(false);
                 }
 
                 // delegate the binding to the section content
@@ -370,13 +357,14 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
     @Override
     public int getItemViewType(int position) {
         /*
-         Each Section has 6 "viewtypes":
+         Each Section has 7 "viewtypes":
          1) header
          2) footer
          3) items
          4) loading
          5) load failed
          6) empty
+         7) Advert
          */
         int currentPos = 0;
 
@@ -407,18 +395,10 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
                     }
                 }
 
-                if (section.hasAdvert() && sectionTotal >= section.getMinimumItemsPerAd()) {
-                    if (section.hasFooter()) {
-                        if (position == (currentPos + sectionTotal)) {
-                            return viewType + 6;
-                        }
-                    } else {
-                        if (position == (currentPos + sectionTotal - 1)) {
-                            return viewType + 6;
-                        }
+                if (section.hasAdvert()) {
+                    if (position == (currentPos + sectionTotal - 1)) {
+                        return viewType + 6;
                     }
-                } else {
-                    section.setHasAdvert(false);
                 }
 
                 switch (section.getState()) {
@@ -666,7 +646,30 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
         if (!section.hasFooter()) {
             throw new IllegalStateException("Section doesn't have a footer");
         }
+        return getSectionPosition(section) + section.getSectionItemsTotal() - 1;
+    }
 
+    /**
+     * Helper method that returns the position of footer in the adapter.
+     *
+     * @param tag unique identifier of the section
+     * @return position of the footer in the adapter
+     */
+    public int getAdvertPositionInAdapter(String tag) {
+        Section section = getValidSectionOrThrowException(tag);
+        return getAdvertPositionInAdapter(section);
+    }
+
+    /**
+     * Helper method that returns the position of footer in the adapter.
+     *
+     * @param section a visible section of this adapter
+     * @return position of the footer in the adapter
+     */
+    public int getAdvertPositionInAdapter(Section section) {
+        if (!section.hasFooter()) {
+            throw new IllegalStateException("Section doesn't have an advert");
+        }
         return getSectionPosition(section) + section.getSectionItemsTotal() - 1;
     }
 
@@ -1120,6 +1123,30 @@ public class SectionedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
         int footerPosition = getFooterPositionInAdapter(section);
 
         callSuperNotifyItemInserted(footerPosition);
+    }
+
+    /**
+     * Helper method that calls {@link #notifyItemInserted} with the position of the section's
+     * advert in the adapter. Useful to be called after changing the visibility of the section's
+     * advert to visible with {@link Section#setHasAdvert}.
+     *
+     * @param tag unique identifier of the section
+     */
+    public void notifyAdvertInsertedInSection(String tag) {
+        Section section = getValidSectionOrThrowException(tag);
+        notifyAdvertInsertedInSection(section);
+    }
+
+    /**
+     * Helper method that calls {@link #notifyItemInserted} with the position of the section's
+     * advert in the adapter. Useful to be called after changing the visibility of the section's
+     * advert to visible with {@link Section#hasAdvert()}.
+     *
+     * @param section a visible section of this adapter
+     */
+    public void notifyAdvertInsertedInSection(Section section) {
+        int adPosition = getAdvertPositionInAdapter(section);
+        callSuperNotifyItemInserted(adPosition);
     }
 
     /**
